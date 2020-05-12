@@ -21,7 +21,7 @@ public class GraphMaker {
         this.xData = xData;
     }
 
-    public JPanel getChart(int width, int height, double changeX, double changeY) {
+    public JPanel getChart(int width, int height, double changeX, double changeY, boolean isChanged) {
         XYChart chart = new XYChart(width, height);
         chart.getStyler().setXAxisMin(xData[0]);
         chart.getStyler().setXAxisMax(xData[xData.length - 1]);
@@ -34,11 +34,13 @@ public class GraphMaker {
         points.setMarkerColor(Color.BLUE);
         points.setLineColor(Color.WHITE);
 
-        XYSeries changeSeries = chart.addSeries("Измененное значение",
-                new double[]{changeX}, new double[]{changeY});
-        changeSeries.setMarker(SeriesMarkers.CIRCLE);
-        changeSeries.setMarkerColor(Color.RED);
-        changeSeries.setLineColor(Color.WHITE);
+        if (isChanged) {
+            XYSeries changeSeries = chart.addSeries("Измененное значение",
+                    new double[]{changeX}, new double[]{changeY});
+            changeSeries.setMarker(SeriesMarkers.CIRCLE);
+            changeSeries.setMarkerColor(Color.RED);
+            changeSeries.setLineColor(Color.WHITE);
+        }
 
         double step = Math.abs(xData[xData.length - 1] - xData[0]) / width;
         double[] xGraphing = new double[width];

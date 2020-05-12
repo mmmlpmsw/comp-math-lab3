@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class UserInterface {
-    private final double CHANGE_COEFFICIENT = 2;
+    private String CHANGE_COEFFICIENT = "2";
     private JFrame mainFrame;
     private Function baseFunction;
     private Function interpolateFunction;
@@ -58,14 +58,27 @@ public class UserInterface {
     private JPanel getGraphPanel(int width, int height, double changeX) {
 
         Arrays.sort(xData);
+        double change_coef = 0;
+        try {
+            change_coef = Double.parseDouble(CHANGE_COEFFICIENT);
+        } catch (NumberFormatException ignored) {}
+        double finalChange_coef = change_coef;
         double[] yData = Arrays.stream(xData).map(x -> Double.compare(x, changeX) == 0 ?
-                baseFunction.getValue(x) * CHANGE_COEFFICIENT : baseFunction.getValue(x)).toArray();
+                baseFunction.getValue(x) * finalChange_coef : baseFunction.getValue(x)).toArray();
 
         Function interpolateFunction = new SplinesStorage(xData, yData).interpolate();
         this.interpolateFunction = interpolateFunction;
 
-        JPanel graphPanel = new GraphMaker(baseFunction, interpolateFunction, xData).
-                getChart(width, height, changeX, baseFunction.getValue(changeX) * CHANGE_COEFFICIENT);
+        JPanel graphPanel;
+        if (CHANGE_COEFFICIENT.equals("1")) {
+            graphPanel = new GraphMaker(baseFunction, interpolateFunction, xData).
+                    getChart(width, height, changeX, baseFunction.getValue(changeX) * change_coef, false);
+        }
+
+        else
+            graphPanel = new GraphMaker(baseFunction, interpolateFunction, xData).
+                    getChart(width, height, changeX, baseFunction.getValue(changeX) * change_coef, true);
+
         graphPanel.setLocation(0, 0);
         graphPanel.setSize(width, height);
         return graphPanel;
@@ -79,6 +92,7 @@ public class UserInterface {
         selectedFunction.addItem("e^x");
         selectedFunction.addItem("1/(x^4 + 4)");
         selectedFunction.addItem("x^2");
+        selectedFunction.addItem("|x|");
         selectFunctionPanel.add(selectedFunction);
         controlPanel.add(selectFunctionPanel);
         selectedFunction.addActionListener(e -> {
@@ -92,6 +106,9 @@ public class UserInterface {
                     break;
                 case "x^2":
                     this.baseFunction = arg -> arg*arg;
+                    break;
+                case "|x|":
+                    this.baseFunction = arg -> Math.abs(arg);
                     break;
 
             }
@@ -193,14 +210,25 @@ public class UserInterface {
 
             double changeX;
             try {
-                changeX = Double.parseDouble(changeField.getText().replace(',', '.'));
+                if (changeField.getText().equals("")) {
+                    CHANGE_COEFFICIENT = "1";
+                    changeX = xData[0];
+
+                }
+                else {
+                    CHANGE_COEFFICIENT = "2";
+                    changeX = Double.parseDouble(changeField.getText().replace(',', '.'));
+                }
+
+
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(mainFrame, "Выберите узел, в котором нужно заменить значение функции",
                         errorTitle, JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            if (Arrays.stream(xData).noneMatch(n -> Double.compare(n, changeX) == 0)) {
+            double finalChangeX = changeX;
+            if (Arrays.stream(xData).noneMatch(n -> Double.compare(n, finalChangeX) == 0)) {
                 JOptionPane.showMessageDialog(mainFrame, "Точка, в которой нужно заменить " +
                         "значение функции должна быть узлом интерполяции", errorTitle, JOptionPane.ERROR_MESSAGE);
             }
